@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Dashboard</title>
+    <script>
+        function startTracking() {
+            fetch('/employee/{{ employee_id }}/start_tracking', {
+                method: 'POST'
+            }).then(response => response.json()).then(data => {
+                alert(data.status);
+            });
+        }
+
+        function stopTracking() {
+            fetch('/employee/{{ employee_id }}/stop_tracking', {
+                method: 'POST'
+            }).then(response => response.json()).then(data => {
+                alert(data.status);
+            });
+        }
+
+        function checkWarnings() {
+            fetch('/employee/{{ employee_id }}/check_warnings')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.warning) {
+                        alert(data.warning);
+                    }
+                });
+        }
+    </script>
+</head>
+<body>
+    <h1>Employee Dashboard</h1>
+    <p>Weekly Hours Worked: {{ weekly_hours }}</p>
+    <p>Remaining Hours: {{ remaining_hours }}</p>
+    <button onclick="startTracking()">Start Tracking</button>
+    <button onclick="stopTracking()">Stop Tracking</button>
+    <button onclick="checkWarnings()">Check Warnings</button>
+    <br><br>
+    <h2>Messages</h2>
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No messages.</p>
+    {% endif %}
+
+    <a href="{{ url_for('log_hours', employee_id=employee_id) }}">Manual input: Log Hours</a>
+    <br>
+     <a href="{{ url_for('weekly_hours', employee_id=employee_id) }}">View Weekly Hours</a>
+
+</body>
+</html>

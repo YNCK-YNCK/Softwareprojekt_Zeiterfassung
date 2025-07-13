@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Send Message</title>
+</head>
+<body>
+    <h1>Send Message to Employee</h1>
+    <form method="POST">
+        <label for="employee_id">Employee:</label>
+        <select name="employee_id" id="employee_id" required>
+            {% for employee in employees %}
+            <option value="{{ employee.employee_id }}">{{ employee.name }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <label for="reduction_hours">Hours to Reduce:</label>
+        <select name="reduction_hours" id="reduction_hours" required>
+            <option value="1">1 hour</option>
+            <option value="2">2 hours</option>
+            <option value="4">4 hours</option>
+            <option value="8">8 hours</option>
+        </select>
+        <br>
+        <button type="submit">Send Message</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Time Tracking System</title>
+</head>
+<body>
+    <h1>Welcome to the Time Tracking System</h1>
+    <form action="{{ url_for('login') }}" method="POST">
+        <label for="role">I am a:</label>
+        <select name="role" id="role" required>
+            <option value="employer">Employer</option>
+            <option value="employee">Employee</option>
+        </select>
+        <br>
+        <label for="user_id">User ID:</label>
+        <input type="text" id="user_id" name="user_id" required>
+        <br>
+        <button type="submit">Login</button>
+    </form>
+</body>
+</html>

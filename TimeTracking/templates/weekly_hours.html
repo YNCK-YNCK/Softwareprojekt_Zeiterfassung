@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Weekly Hours</title>
+</head>
+<body>
+    <h1>Weekly Hours for {{ employee.name }}</h1>
+    <p>Week: {{ week }}</p>
+    <p>Year: {{ year }}</p>
+    <p>Total Hours Worked: {{ weekly_hours }}</p>
+    <a href="{{ url_for('employee_dashboard', employee_id=employee.employee_id) }}">Back to Dashboard</a>
+</body>
+</html>

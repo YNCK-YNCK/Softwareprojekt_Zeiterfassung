@@ -32,7 +32,14 @@
     </script>
 </head>
 <body>
+     <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+        </ul>
+    </nav>
+    <a href="#" onclick="window.history.back();">Zurück</a> <br>
     <h1>Employee Dashboard</h1>
+    <p>Name: {{ employee.name }}</p>
     <p>Weekly Hours Worked: {{ weekly_hours }}</p>
     <p>Remaining Hours: {{ remaining_hours }}</p>
     <button onclick="startTracking()">Start Tracking</button>

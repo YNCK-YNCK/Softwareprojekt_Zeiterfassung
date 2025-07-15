@@ -3,15 +3,13 @@ from datetime import datetime
 from TimeTracking.models.employee import Employee
 from TimeTracking.models.employer import Employer
 
-
 class TimeTrackingController:
     def __init__(self):
         self.employer = Employer(employer_id="001", name="ACME CORPORATION")
-
-        # Load existing data from CSV files
+        # Load existing data from Excel files
         try:
-            self.employees_df = pd.read_csv('employees.csv')
-            self.worked_hours_df = pd.read_csv('worked_hours.csv')
+            self.employees_df = pd.read_excel('employees.xlsx')
+            self.worked_hours_df = pd.read_excel('worked_hours.xlsx')
         except FileNotFoundError:
             self.employees_df = pd.DataFrame(columns=['employee_id', 'name', 'weekly_hours'])
             self.worked_hours_df = pd.DataFrame(columns=['employee_id', 'date', 'hours'])
@@ -21,19 +19,15 @@ class TimeTrackingController:
             employee = Employee(row['employee_id'], row['name'], row['weekly_hours'])
             self.employer.add_employee(employee)
 
-
     def create_employee(self, employee_id, name, weekly_hours):
         employee = Employee(employee_id, name, weekly_hours)
         self.employer.add_employee(employee)
-
         # Add employee to the DataFrame
         new_employee = pd.DataFrame([[employee_id, name, weekly_hours]],
                                     columns=['employee_id', 'name', 'weekly_hours'])
         self.employees_df = pd.concat([self.employees_df, new_employee], ignore_index=True)
-
-        # Save to CSV
-        self.employees_df.to_csv('employees.csv', index=False)
-
+        # Save to Excel
+        self.employees_df.to_excel('employees.xlsx', index=False)
         return employee
 
     def log_hours_for_employee(self, employee_id, date, hours):
@@ -44,18 +38,17 @@ class TimeTrackingController:
             new_hours = pd.DataFrame([[employee_id, date, hours]],
                                     columns=['employee_id', 'date', 'hours'])
             self.worked_hours_df = pd.concat([self.worked_hours_df, new_hours], ignore_index=True)
-            # Save to CSV
-            self.worked_hours_df.to_csv('worked_hours.csv', index=False)
+            # Save to Excel
+            self.worked_hours_df.to_excel('worked_hours.xlsx', index=False)
             return True
         return False
 
-
     def get_employee_weekly_hours(self, employee_id, year, week):
-    # Filter worked hours for the specific employee, year, and week
+        # Filter worked hours for the specific employee, year, and week
         weekly_hours = self.worked_hours_df[
-        (self.worked_hours_df['employee_id'] == employee_id) &
-        (pd.to_datetime(self.worked_hours_df['date']).dt.year == year) &
-        (pd.to_datetime(self.worked_hours_df['date']).dt.isocalendar().week == week)
+            (self.worked_hours_df['employee_id'] == employee_id) &
+            (pd.to_datetime(self.worked_hours_df['date']).dt.year == year) &
+            (pd.to_datetime(self.worked_hours_df['date']).dt.isocalendar().week == week)
         ]['hours'].sum()
         return weekly_hours
 
@@ -67,17 +60,16 @@ class TimeTrackingController:
             return (employee.weekly_hours - reduced_hours) - weekly_hours_worked
         return None
 
-
 class Message:
     def __init__(self, employee_id, content):
         self.employee_id = employee_id
         self.content = content
 
 class EventLogger:
-    def __init__(self, file_path='events.csv'):
+    def __init__(self, file_path='events.xlsx'):
         self.file_path = file_path
         try:
-            self.events_df = pd.read_csv(self.file_path)
+            self.events_df = pd.read_excel(self.file_path)
         except FileNotFoundError:
             self.events_df = pd.DataFrame(columns=['employee_id', 'date', 'event_type', 'details'])
 
@@ -85,4 +77,4 @@ class EventLogger:
         new_event = pd.DataFrame([[employee_id, datetime.now().strftime("%Y-%m-%d"), event_type, details]],
                                 columns=['employee_id', 'date', 'event_type', 'details'])
         self.events_df = pd.concat([self.events_df, new_event], ignore_index=True)
-        self.events_df.to_csv(self.file_path, index=False)
+        self.events_df.to_excel(self.file_path, index=False)

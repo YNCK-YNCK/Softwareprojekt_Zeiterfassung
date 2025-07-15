@@ -1,7 +1,8 @@
+import os
 import pandas as pd
 from datetime import datetime
-from TimeTracking.models.employee import Employee
-from TimeTracking.models.employer import Employer
+from models.employee import Employee
+from models.employer import Employer
 
 class TimeTrackingController:
     def __init__(self):
@@ -59,6 +60,28 @@ class TimeTrackingController:
             reduced_hours = employee.get_reduced_hours_for_week(year, week)
             return (employee.weekly_hours - reduced_hours) - weekly_hours_worked
         return None
+
+    def create_employee_directory(self):
+        # Create a directory DataFrame
+        directory_df = self.employees_df[['employee_id', 'name']].copy()
+        directory_df.to_excel('employee_directory.xlsx', index=False)
+
+    def create_yearly_summary(self):
+        # Ensure the directory exists
+        if not os.path.exists('yearly_summaries'):
+            os.makedirs('yearly_summaries')
+
+        # Convert the 'date' column to datetime if it's not already
+        self.worked_hours_df['date'] = pd.to_datetime(self.worked_hours_df['date'])
+
+        # Group by employee and year, and only consider years with logged hours
+        yearly_summaries = self.worked_hours_df.groupby(['employee_id', self.worked_hours_df['date'].dt.year])['hours'].sum().reset_index()
+
+        # Create a summary file for each employee and year where hours were logged
+        for employee_id, year, total_hours in yearly_summaries.itertuples(index=False):
+            filename = f"yearly_summaries/{int(year)}_employee-{employee_id}.xlsx"
+            summary_df = pd.DataFrame([[int(year), total_hours]], columns=['year', 'total_hours'])
+            summary_df.to_excel(filename, index=False)
 
 class Message:
     def __init__(self, employee_id, content):

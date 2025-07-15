@@ -2,10 +2,10 @@ import pandas as pd
 from datetime import datetime
 
 class EventLogger:
-    def __init__(self, file_path='events.csv'):
+    def __init__(self, file_path='events.xlsx'):
         self.file_path = file_path
         try:
-            self.events_df = pd.read_csv(self.file_path)
+            self.events_df = pd.read_excel(self.file_path)
         except FileNotFoundError:
             self.events_df = pd.DataFrame(columns=['employee_id', 'date', 'event_type', 'details'])
 
@@ -13,7 +13,7 @@ class EventLogger:
         new_event = pd.DataFrame([[employee_id, datetime.now().strftime("%Y-%m-%d"), event_type, details]],
                                 columns=['employee_id', 'date', 'event_type', 'details'])
         self.events_df = pd.concat([self.events_df, new_event], ignore_index=True)
-        self.events_df.to_csv(self.file_path, index=False)
+        self.events_df.to_excel(self.file_path, index=False)
 
 class Employee:
     def __init__(self, employee_id, name, weekly_hours):

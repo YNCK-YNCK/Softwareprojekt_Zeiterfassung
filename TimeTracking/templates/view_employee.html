@@ -5,10 +5,17 @@
     <title>View Employee</title>
 </head>
 <body>
+     <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+        </ul>
+    </nav>
+    <a href="#" onclick="window.history.back();">Zurück</a> <br>
     <h1>Employee Details</h1>
     <p>Name: {{ employee.name }}</p>
     <p>Weekly Hours: {{ employee.weekly_hours }}</p>
     <p>Weekly Hours Worked: {{ weekly_hours }}</p>
     <p>Reduced Hours: {{ reduced_hours }}</p>
+    <p> <a href="/employer/send_message">Nachricht senden</a> </p>
 </body>
 </html>

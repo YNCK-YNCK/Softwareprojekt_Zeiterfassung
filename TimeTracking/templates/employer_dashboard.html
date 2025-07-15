@@ -5,6 +5,13 @@
     <title>Employer Dashboard</title>
 </head>
 <body>
+     <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+        </ul>
+    </nav>
+    <a href="#" onclick="window.history.back();">Zurück</a>
+     <br><br>
     <h1>Employer Dashboard</h1>
     <a href="{{ url_for('add_employee') }}">Add Employee</a>
     <ul>
@@ -16,5 +23,11 @@
         </li>
         {% endfor %}
     </ul>
+    <p> <a href="/employer/send_message">Nachricht senden</a></p>
+    <p>
+        <form action="{{ url_for('create_yearly_summaries') }}" method="POST">
+        <button type="submit">Create Yearly Summaries</button>
+    </form>
+    </p>
 </body>
 </html>

@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from TimeTracking.controllers.time_tracking_controller import TimeTrackingController, Message
+from controllers.time_tracking_controller import TimeTrackingController, Message
 from datetime import datetime
 
 app = Flask(__name__)
@@ -74,6 +74,12 @@ def send_message():
         return redirect(url_for('employer_dashboard'))
     employees = controller.employees_df.to_dict('records')
     return render_template('send_message.html', employees=employees)
+
+@app.route('/employer/create_yearly_summaries', methods=['POST'])
+def create_yearly_summaries():
+    # Call the function to create yearly summaries
+    controller.create_yearly_summary()
+    return redirect(url_for('employer_dashboard'))
 
 @app.route('/employee/<employee_id>/start_tracking', methods=['POST'])
 def start_tracking(employee_id):

@@ -23,7 +23,7 @@ class Employee:
         self.worked_hours = {}
         self.start_time = None
         self.weekly_reductions = {}
-        self.event_logger = EventLogger()  # Initialize EventLogger
+        self.event_logger = EventLogger()  # Initialisierung des EventLoggers
 
     def log_hours(self, date, hours):
         if date in self.worked_hours:

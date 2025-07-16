@@ -1,8 +1,36 @@
 import os
 import pandas as pd
+import openpyxl
 from datetime import datetime
 from models.employee import Employee
 from models.employer import Employer
+from deutschland.feiertage.api import default_api
+from deutschland import feiertage
+
+# Configure the API client to fetch holiday data
+configuration = feiertage.Configuration(host="https://feiertage-api.de/api")
+
+def get_german_holidays(year):
+    with feiertage.ApiClient(configuration) as api_client:
+        api_instance = default_api.DefaultApi(api_client)
+        try:
+            jahr = str(year)
+            nur_land = "NATIONAL"
+            nur_daten = 1
+            api_response = api_instance.get_feiertage(jahr=jahr, nur_land=nur_land, nur_daten=nur_daten)
+            return api_response
+        except feiertage.ApiException as e:
+            print(f"Exception when calling DefaultApi->get_feiertage: {e}\n")
+            return {}
+
+def is_weekend_or_holiday(date):
+    if date.weekday() >= 5:  # 5 and 6 correspond to Saturday and Sunday
+        return True
+    holidays = get_german_holidays(date.year)
+    for holiday_name, holiday_date in holidays.items():
+        if holiday_date == date:
+            return True
+    return False
 
 class TimeTrackingController:
     def __init__(self):
@@ -70,11 +98,47 @@ class TimeTrackingController:
 
             # Log the break time in the EventLogger
             self.log_break_event(employee_id, date, break_time)
-
-            # Save to Excel
-            self.worked_hours_df.to_excel('worked_hours.xlsx', index=False)
+            
+            # Save to Excel with highlighted weekends and holidays
+            self.save_to_excel_with_highlights()
+            
+            # Save to Excel (deprecated)
+            #self.worked_hours_df.to_excel('worked_hours.xlsx', index=False)
             return True
         return False
+
+    def save_to_excel_with_highlights(self):
+        # Create a new Excel workbook and select the active worksheet
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+
+        # Write the header
+        headers = ['employee_id', 'date', 'hours']
+        for col_num, header in enumerate(headers, 1):
+            cell = sheet.cell(row=1, column=col_num, value=header)
+            cell.font = openpyxl.styles.Font(bold=True)
+
+        # Write the data and apply styling
+        for row_num, row in enumerate(self.worked_hours_df.itertuples(index=False), 2):
+            for col_num, value in enumerate(row, 1):
+                cell = sheet.cell(row=row_num, column=col_num, value=value)
+
+            # Check if the date is a weekend or holiday and apply background color
+            if is_weekend_or_holiday(row.date.date()):
+                for col_num in range(1, len(row) + 1):
+                    cell = sheet.cell(row=row_num, column=col_num)
+                    cell.fill = openpyxl.styles.PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+
+        # Save the workbook
+        try:
+            workbook.save('worked_hours.xlsx')
+        except Exception as e:
+            print(f"Error saving Excel file: {e}")
+
+
+    def log_break_event(self, employee_id, date, break_time):
+        event_logger = EventLogger()
+        event_logger.log_event(employee_id, 'break', f'Pausenzeit von {break_time} Minuten abgezogen.')
 
     def log_break_event(self, employee_id, date, break_time):
         event_logger = EventLogger()

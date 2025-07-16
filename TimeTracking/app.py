@@ -111,18 +111,30 @@ def check_warnings(employee_id):
 
 @app.route('/employee/<employee_id>/log_hours', methods=['GET', 'POST'])
 def log_hours(employee_id):
-    # Convert employee_id to the correct data type
     employee_id = controller.employees_df['employee_id'].dtype.type(employee_id)
     if request.method == 'POST':
-        date = request.form['date']
-        hours = float(request.form['hours'])
-        # Log the hours using the controller
+        date = request.form.get('date')
+        hours = request.form.get('hours')
+
+        # Debugging-Ausgaben
+        print(f"Received date: {date}, hours: {hours}")
+
+        if not date or not hours:
+            return "Date and hours are required", 400
+
+        try:
+            hours = float(hours)
+        except ValueError:
+            return "Hours must be a valid number", 400
+
         success = controller.log_hours_for_employee(employee_id, date, hours)
         if success:
             return redirect(url_for('employee_dashboard', employee_id=employee_id))
         else:
             return "Failed to log hours", 400
+
     return render_template('log_hours.html', employee_id=employee_id)
+
 
 @app.route('/employee/<employee_id>')
 def employee_dashboard(employee_id):
@@ -131,13 +143,22 @@ def employee_dashboard(employee_id):
     employee = controller.employer.get_employee(employee_id)
     if not employee:
         return "Employee not found", 404
+
     # Get messages for the specific employee
     employee_messages = [msg.content for msg in messages if msg.employee_id == employee_id]
     current_year = datetime.now().year
     current_week = datetime.now().isocalendar()[1]
     weekly_hours = controller.get_employee_weekly_hours(employee_id, current_year, current_week)
     remaining_hours = controller.get_employee_remaining_hours(employee_id, current_year, current_week)
-    return render_template('employee_dashboard.html', employee_id=employee_id, weekly_hours=weekly_hours, remaining_hours=remaining_hours, messages=employee_messages)
+
+    # Pass the employee object to the template
+    return render_template('employee_dashboard.html',
+                           employee=employee,
+                           employee_id=employee_id,
+                           weekly_hours=weekly_hours,
+                           remaining_hours=remaining_hours,
+                           messages=employee_messages)
+
 
 @app.route('/employee/<employee_id>/weekly_hours')
 def weekly_hours(employee_id):

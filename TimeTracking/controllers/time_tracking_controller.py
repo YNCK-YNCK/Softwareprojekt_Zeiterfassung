@@ -7,7 +7,7 @@ from models.employer import Employer
 from deutschland.feiertage.api import default_api
 from deutschland import feiertage
 
-# Configure the API client to fetch holiday data
+# Setzen der Standardkonfiguration für die API
 configuration = feiertage.Configuration(host="https://feiertage-api.de/api")
 
 def get_german_holidays(year):
@@ -36,6 +36,8 @@ class TimeTrackingController:
         try:
             self.employees_df = pd.read_excel('employees.xlsx')
             self.worked_hours_df = pd.read_excel('worked_hours.xlsx')
+            # Konvertiere die 'date'-Spalte in ein Datum
+            self.worked_hours_df['date'] = pd.to_datetime(self.worked_hours_df['date']).dt.date
         except FileNotFoundError:
             self.employees_df = pd.DataFrame(columns=['employee_id', 'name', 'weekly_hours'])
             self.worked_hours_df = pd.DataFrame(columns=['employee_id', 'date', 'hours'])
@@ -151,11 +153,22 @@ class TimeTrackingController:
 
     def check_warnings(self, employee_id):
         today = datetime.now().date()
-        today_hours = self.worked_hours_df[
+        today_hours_series = self.worked_hours_df[
             (self.worked_hours_df['employee_id'] == employee_id) &
             (self.worked_hours_df['date'] == today)
-        ]['hours'].sum()
-        print({today_hours})
+        ]['hours']
+
+        if today_hours_series.empty:
+            today_hours = 0
+        else:
+            # Konvertiere die Spalte in numerische Werte, falls nötig
+            today_hours = pd.to_numeric(today_hours_series, errors='coerce').sum()
+            # Falls NaN (durch 'coerce'), setze auf 0
+            if pd.isna(today_hours):
+                today_hours = 0
+
+        print(f"Type of today_hours: {type(today_hours)}")
+        print(f"Value of today_hours: {today_hours}")
 
         if today_hours > 8:
             event_logger = EventLogger()
@@ -166,6 +179,7 @@ class TimeTrackingController:
                 return "Stopped: Exceeded maximum working hours of 11."
             return "Warning: Exceeded 8 hours of work."
         return None
+
 
     def create_employee_directory(self):
         directory_df = self.employees_df[['employee_id', 'name']].copy()

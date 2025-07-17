@@ -27,15 +27,11 @@ def is_weekend_or_holiday(date):
     if date.weekday() >= 5:  # 5 and 6 correspond to Saturday and Sunday
         return True
     holidays = get_german_holidays(date.year)
-    for holiday_name, holiday_date in holidays.items():
-        if holiday_date == date:
-            return True
-    return False
+    return any(holiday_date == date for holiday_date in holidays.values())
 
 class TimeTrackingController:
     def __init__(self):
         self.employer = Employer(employer_id="001", name="ACME CORPORATION")
-        # Load existing data from Excel files
         try:
             self.employees_df = pd.read_excel('employees.xlsx')
             self.worked_hours_df = pd.read_excel('worked_hours.xlsx')
@@ -43,109 +39,86 @@ class TimeTrackingController:
             self.employees_df = pd.DataFrame(columns=['employee_id', 'name', 'weekly_hours'])
             self.worked_hours_df = pd.DataFrame(columns=['employee_id', 'date', 'hours'])
 
-        # Add employees to the employer from the DataFrame
         for _, row in self.employees_df.iterrows():
             employee = Employee(row['employee_id'], row['name'], row['weekly_hours'])
             self.employer.add_employee(employee)
-    
+
     def create_employee(self, employee_id, name, weekly_hours):
-            employee = Employee(employee_id, name, weekly_hours)
-            self.employer.add_employee(employee)
-            # Add employee to the DataFrame
-            new_employee = pd.DataFrame([[employee_id, name, weekly_hours]],
-                                        columns=['employee_id', 'name', 'weekly_hours'])
-            self.employees_df = pd.concat([self.employees_df, new_employee], ignore_index=True)
-            # Save to Excel
-            self.employees_df.to_excel('employees.xlsx', index=False)
-            return employee
-  
+        employee = Employee(employee_id, name, weekly_hours)
+        self.employer.add_employee(employee)
+        new_employee = pd.DataFrame([[employee_id, name, weekly_hours]],
+                                    columns=['employee_id', 'name', 'weekly_hours'])
+        self.employees_df = pd.concat([self.employees_df, new_employee], ignore_index=True)
+        self.employees_df.to_excel('employees.xlsx', index=False)
+        return employee
+
     @staticmethod
     def calculate_break_time(total_hours, has_break_logged):
         if total_hours > 9:
-            return 15 if has_break_logged else 45  # 15 minutes additional break if already logged, else 45 minutes
+            return 15 if has_break_logged else 45
         elif total_hours > 6:
-            return 0 if has_break_logged else 30  # No additional break if already logged, else 30 minutes
-        else:
-            return 0  # No break for 6 hours or less
-
+            return 0 if has_break_logged else 30
+        return 0
 
     def log_hours_for_employee(self, employee_id, date, hours):
         employee = self.employer.get_employee(employee_id)
-        if employee:
-            date = pd.to_datetime(date)
-            existing_hours = self.worked_hours_df[
-                (self.worked_hours_df['employee_id'] == employee_id) &
-                (self.worked_hours_df['date'] == date)
-            ]['hours'].sum()
-            total_hours = existing_hours + hours
+        if not employee:
+            return False
 
-            # Check if a break has already been logged for this employee on this date
-            event_logger = EventLogger()
-            has_break_logged = event_logger.has_break_event(employee_id, date)
+        date = pd.to_datetime(date)
+        existing_hours = self.worked_hours_df[
+            (self.worked_hours_df['employee_id'] == employee_id) &
+            (self.worked_hours_df['date'] == date)
+        ]['hours'].sum()
 
-            break_time = self.calculate_break_time(total_hours, has_break_logged)
-            effective_hours = total_hours - (break_time / 60)
+        total_hours = existing_hours + hours
+        event_logger = EventLogger()
+        has_break_logged = event_logger.has_break_event(employee_id, date)
+        break_time = self.calculate_break_time(total_hours, has_break_logged)
+        effective_hours = total_hours - (break_time / 60)
 
-            # Remove existing entries for the same date to avoid duplication
-            self.worked_hours_df = self.worked_hours_df[
-                ~((self.worked_hours_df['employee_id'] == employee_id) &
-                  (self.worked_hours_df['date'] == date))
-            ]
+        self.worked_hours_df = self.worked_hours_df[
+            ~((self.worked_hours_df['employee_id'] == employee_id) &
+              (self.worked_hours_df['date'] == date))
+        ]
 
-            new_hours = pd.DataFrame([[employee_id, date, effective_hours]],
-                                     columns=['employee_id', 'date', 'hours'])
-            self.worked_hours_df = pd.concat([self.worked_hours_df, new_hours], ignore_index=True)
-
-            # Log the break time in the EventLogger
-            self.log_break_event(employee_id, date, break_time)
-            
-            # Save to Excel with highlighted weekends and holidays
-            self.save_to_excel_with_highlights()
-            
-            # Save to Excel (deprecated)
-            #self.worked_hours_df.to_excel('worked_hours.xlsx', index=False)
-            return True
-        return False
+        new_hours = pd.DataFrame([[employee_id, date, effective_hours]],
+                                 columns=['employee_id', 'date', 'hours'])
+        self.worked_hours_df = pd.concat([self.worked_hours_df, new_hours], ignore_index=True)
+        self.log_break_event(employee_id, date, break_time)
+        self.save_to_excel_with_highlights()
+        return True
 
     def save_to_excel_with_highlights(self):
-        # Create a new Excel workbook and select the active worksheet
         workbook = openpyxl.Workbook()
         sheet = workbook.active
-
-        # Write the header
         headers = ['employee_id', 'date', 'hours']
         for col_num, header in enumerate(headers, 1):
             cell = sheet.cell(row=1, column=col_num, value=header)
             cell.font = openpyxl.styles.Font(bold=True)
 
-        # Write the data and apply styling
+        date_format = 'yyyy-mm-dd'
         for row_num, row in enumerate(self.worked_hours_df.itertuples(index=False), 2):
             for col_num, value in enumerate(row, 1):
                 cell = sheet.cell(row=row_num, column=col_num, value=value)
+                if col_num == 2:
+                    cell.number_format = date_format
 
-            # Check if the date is a weekend or holiday and apply background color
             if is_weekend_or_holiday(row.date.date()):
                 for col_num in range(1, len(row) + 1):
                     cell = sheet.cell(row=row_num, column=col_num)
                     cell.fill = openpyxl.styles.PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
 
-        # Save the workbook
         try:
             workbook.save('worked_hours.xlsx')
         except Exception as e:
             print(f"Error saving Excel file: {e}")
-
-
-    def log_break_event(self, employee_id, date, break_time):
-        event_logger = EventLogger()
-        event_logger.log_event(employee_id, 'break', f'Pausenzeit von {break_time} Minuten abgezogen.')
 
     def log_break_event(self, employee_id, date, break_time):
         event_logger = EventLogger()
         event_logger.log_event(employee_id, 'break', f'Pausenzeit von {break_time} Minuten abgezogen.')
 
     def get_employee_weekly_hours(self, employee_id, year, week):
-        # Filter worked hours for the specific employee, year, and week
         weekly_hours = self.worked_hours_df[
             (self.worked_hours_df['employee_id'] == employee_id) &
             (pd.to_datetime(self.worked_hours_df['date']).dt.year == year) &
@@ -162,22 +135,16 @@ class TimeTrackingController:
         return None
 
     def create_employee_directory(self):
-        # Create a directory DataFrame
         directory_df = self.employees_df[['employee_id', 'name']].copy()
         directory_df.to_excel('employee_directory.xlsx', index=False)
 
     def create_yearly_summary(self):
-        # Ensure the directory exists
         if not os.path.exists('yearly_summaries'):
             os.makedirs('yearly_summaries')
 
-        # Convert the 'date' column to datetime if it's not already
         self.worked_hours_df['date'] = pd.to_datetime(self.worked_hours_df['date'])
-
-        # Group by employee and year, and only consider years with logged hours
         yearly_summaries = self.worked_hours_df.groupby(['employee_id', self.worked_hours_df['date'].dt.year])['hours'].sum().reset_index()
 
-        # Create a summary file for each employee and year where hours were logged
         for employee_id, year, total_hours in yearly_summaries.itertuples(index=False):
             filename = f"yearly_summaries/{int(year)}_employee-{employee_id}.xlsx"
             summary_df = pd.DataFrame([[int(year), total_hours]], columns=['year', 'total_hours'])

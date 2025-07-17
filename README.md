@@ -61,3 +61,7 @@ def calculate_break_time(total_hours, has_break_logged):
     return 0
 ```
 
+Der Kampf mit den Datentypen und Formaten beim import-export usw. mit pandas und openpyxl, sowie das Handling der Feiertage und Wochenenden aus der deutschlang.feiertage.api hat mir wirklich Probleme bereitet. Ich vermute, dass ich im Code vermutlich 30-50% der type-conversions weglassen könnte, aber am Ende hab ich das einfach überall reingepackt, bis es verlässlich lief. 
+
+# Fazit
+Das Projekt hat echt Spaß gemacht und war eine gute Übung um mal ein kleines aber Mehrteiliges Softwareprodukt zu bauen. Ich habe den Zeitaufwand definitiv unterschätzt, da ich für die Fehlersuche immer sehr lange gebraucht habe. Viele der Fehler sind mir aber dank- oder vielleicht auch nur aufgrund der Implementierung der API aufgefallen, weil man hierbei die Nutzerinputs etc. gedanklich antizipieren muss. Ich würde das Programm gerne einmal mit SQL im Hintergrund bauen und eine vernünftige Benutezrauthentifizierung implementieren. UND ich würde dafür gerne noch eine mini-GUI bauen, das in der Taskleiste bleibt und Start/Stopp des Tracking streamlined.

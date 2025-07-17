@@ -24,7 +24,7 @@ def get_german_holidays(year):
             return {}
 
 def is_weekend_or_holiday(date):
-    if date.weekday() >= 5:  # 5 and 6 correspond to Saturday and Sunday
+    if date.weekday() >= 5:  # 5 und 6 bedeutet Samstag und Sonntag.
         return True
     holidays = get_german_holidays(date.year)
     return any(holiday_date == date for holiday_date in holidays.values())
@@ -32,7 +32,7 @@ def is_weekend_or_holiday(date):
 class TimeTrackingController:
     def __init__(self):
         self.employer = Employer(employer_id="001", name="ACME CORPORATION")
-        self.tracking = {}  # Dictionary to keep track of who is tracking time
+        self.tracking = {}  # Dictionary um zu dokumentieren, wer die Zeit trackt.
         try:
             self.employees_df = pd.read_excel('employees.xlsx')
             self.worked_hours_df = pd.read_excel('worked_hours.xlsx')
@@ -120,7 +120,7 @@ class TimeTrackingController:
                 if col_num == 2:
                     cell.number_format = date_format
             try:
-                # Versuchen Sie, das Datum in ein datetime.date-Objekt umzuwandeln
+                # Probieren, das Datum in ein datetime.date-Objekt umzuwandeln. Macht ansonsten Probleme bei check_warnings.
                 if isinstance(row.date, str):
                     date_to_check = datetime.strptime(row.date, '%Y-%m-%d').date()
                 elif hasattr(row.date, 'date'):  # Für datetime.datetime-Objekte
@@ -174,7 +174,7 @@ class TimeTrackingController:
         else:
             # Konvertiere die Spalte in numerische Werte, falls nötig
             today_hours = pd.to_numeric(today_hours_series, errors='coerce').sum()
-            # Falls NaN (durch 'coerce'), setze auf 0
+            # Falls NaN (durch 'coerce'), setze auf 0. Gibt ansonsten Fehlercodes aus!
             if pd.isna(today_hours):
                 today_hours = 0
 

@@ -1,0 +1,92 @@
+:root {
+    --primary-color: white;
+    --secondary-color: #2ecc71;
+    --text-color: #333;
+    --background-color: white;
+    --font-primary: 'Arial', sans-serif;
+}
+body {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.logo {
+    display: block;
+    margin: 0 auto;
+    height: 400px; /* Höhe des Logos */
+    width: auto; /* Behält Seitenverhältnis bei */
+}
+
+h1, h2, p, ul, form {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline;
+    margin: 0 10px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+label, input, select, button {
+    margin: 5px 0;
+    width: 100%;
+    max-width: 300px;
+}
+
+button {
+    cursor: pointer;
+}
+
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    background-color: var(--secondary-color);
+    padding: 0.5rem;
+}
+
+nav a {
+    color: white;
+    margin: 0.1rem;
+    text-decoration: none;
+}
+
+main {
+    padding: 2rem;
+}
+
+footer {
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+    padding: 1rem;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+}

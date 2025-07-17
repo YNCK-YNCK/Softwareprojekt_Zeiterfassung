@@ -1,3 +1,7 @@
+
+![web_ui](https://github.com/user-attachments/assets/a6fcf407-36df-43ed-a072-e8c859c8abb3)
+
+
 # Softwareprojekt_Zeiterfassung
 Repo zur Bearbeitung des Softwareprojekts im Fach Softwareentwicklung im Studiengang LL.M. Rechtsinformatik
 

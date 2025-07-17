@@ -32,6 +32,7 @@ def is_weekend_or_holiday(date):
 class TimeTrackingController:
     def __init__(self):
         self.employer = Employer(employer_id="001", name="ACME CORPORATION")
+        self.tracking = {}  # Dictionary to keep track of who is tracking time
         try:
             self.employees_df = pd.read_excel('employees.xlsx')
             self.worked_hours_df = pd.read_excel('worked_hours.xlsx')
@@ -59,6 +60,20 @@ class TimeTrackingController:
         elif total_hours > 6:
             return 0 if has_break_logged else 30
         return 0
+
+    def start_tracking(self, employee_id):
+        if employee_id not in self.tracking:
+            self.tracking[employee_id] = datetime.now()
+            return True
+        return False
+
+    def stop_tracking(self, employee_id):
+        if employee_id in self.tracking:
+            start_time = self.tracking.pop(employee_id)
+            elapsed = datetime.now() - start_time
+            self.log_hours_for_employee(employee_id, datetime.now().date(), elapsed.total_seconds() / 3600)
+            return True
+        return False
 
     def log_hours_for_employee(self, employee_id, date, hours):
         employee = self.employer.get_employee(employee_id)
@@ -132,6 +147,24 @@ class TimeTrackingController:
             weekly_hours_worked = self.get_employee_weekly_hours(employee_id, year, week)
             reduced_hours = employee.get_reduced_hours_for_week(year, week)
             return (employee.weekly_hours - reduced_hours) - weekly_hours_worked
+        return None
+
+    def check_warnings(self, employee_id):
+        today = datetime.now().date()
+        today_hours = self.worked_hours_df[
+            (self.worked_hours_df['employee_id'] == employee_id) &
+            (self.worked_hours_df['date'] == today)
+        ]['hours'].sum()
+        print({today_hours})
+
+        if today_hours > 8:
+            event_logger = EventLogger()
+            event_logger.log_event(employee_id, 'Warning', 'Exceeded 8 hours of work.')
+            if today_hours > 11:
+                self.stop_tracking(employee_id)
+                event_logger.log_event(employee_id, 'System Action', 'Stopped: Exceeded maximum working hours of 11.')
+                return "Stopped: Exceeded maximum working hours of 11."
+            return "Warning: Exceeded 8 hours of work."
         return None
 
     def create_employee_directory(self):

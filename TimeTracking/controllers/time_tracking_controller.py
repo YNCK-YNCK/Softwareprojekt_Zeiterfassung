@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import openpyxl
-from datetime import datetime
+from datetime import datetime, date
 from models.employee import Employee
 from models.employer import Employer
 from deutschland.feiertage.api import default_api
@@ -113,19 +113,30 @@ class TimeTrackingController:
         for col_num, header in enumerate(headers, 1):
             cell = sheet.cell(row=1, column=col_num, value=header)
             cell.font = openpyxl.styles.Font(bold=True)
-
         date_format = 'yyyy-mm-dd'
         for row_num, row in enumerate(self.worked_hours_df.itertuples(index=False), 2):
             for col_num, value in enumerate(row, 1):
                 cell = sheet.cell(row=row_num, column=col_num, value=value)
                 if col_num == 2:
                     cell.number_format = date_format
+            try:
+                # Versuchen Sie, das Datum in ein datetime.date-Objekt umzuwandeln
+                if isinstance(row.date, str):
+                    date_to_check = datetime.strptime(row.date, '%Y-%m-%d').date()
+                elif hasattr(row.date, 'date'):  # Für datetime.datetime-Objekte
+                    date_to_check = row.date.date()
+                elif isinstance(row.date, date):  # Für datetime.date-Objekte
+                    date_to_check = row.date
+                else:
+                    raise ValueError(f"Unsupported date type: {type(row.date)}")
 
-            if is_weekend_or_holiday(row.date.date()):
-                for col_num in range(1, len(row) + 1):
-                    cell = sheet.cell(row=row_num, column=col_num)
-                    cell.fill = openpyxl.styles.PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
-
+                if is_weekend_or_holiday(date_to_check):
+                    for col_num in range(1, len(row) + 1):
+                        cell = sheet.cell(row=row_num, column=col_num)
+                        cell.fill = openpyxl.styles.PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+            except Exception as e:
+                print(f"Error processing date {row.date}: {e}")
+                continue
         try:
             workbook.save('worked_hours.xlsx')
         except Exception as e:
